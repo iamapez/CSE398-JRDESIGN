@@ -96,7 +96,11 @@ def initQRCodes():
 
 
 def pullDataFromJSON():
-
+    """
+    If the JSON file already contains the appropriate values. We can just re-create the python objects
+    in our code. We do that, and return a list of python objects to be used later in the program.
+    :return: a list of user objects generated from the json file
+    """
     pathToDataJSON = 'assets/data.json'
     d = os.getcwd()  # change directories to access the json file containing the data
     os.chdir("..")
@@ -117,30 +121,23 @@ def pullDataFromJSON():
     return listOfUserObjects
 
 
-    print()
-
-    # else:
-    #     # if it doesnt do something throw an exception
-    #     raise FileNotFoundError
-
-
-
-
-
 
 
 if __name__ == '__main__':
+    """
+    Our main entry point for the rock pi python code.  
+    If we dont have any existing data we call initQRCodes() to generate all the data
+    If we do have data we convert our json to python objects then we can do work
+    """
 
     # initQRCodes()         # only call this when we want to generate new qr code data
+    listOfUserObjects = pullDataFromJSON()      # if we already have the data generated, get the objects
 
-    # for next class if assets/data.json exists then regenerate the python objects else we got a problem
+    """
+    Listen for any packets from our Arduinos.  
+    """
 
-    listOfUserObjects = pullDataFromJSON()
-    print()
+    # now we can handle requests from the arduino
 
 
-
-    # setupQRCode
-    #
-    # randomCodeNames = generateQRCodeByName()
     exit(1)
