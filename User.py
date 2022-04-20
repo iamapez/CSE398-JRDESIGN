@@ -8,12 +8,14 @@ class User:
 #         self.carColor = None
 #         self.plateNumber = None
 
-    def __init__(self,uuid=None,balance=None,name=None,carColor=None,plateNumber=None):
+    def __init__(self,uuid=None,balance=None,name=None,carColor=None,plateNumber=None,twitterusername=None, pathToQRCODE=None):
         self.uuid = uuid
         self.balance = balance
         self.name = name
         self.carColor = carColor
         self.plateNumber = plateNumber
+        self.twitterusername = twitterusername
+        self.pathToQRCODE = pathToQRCODE
 
     def getUUID(self):
         return self.uuid
@@ -44,6 +46,18 @@ class User:
 
     def setPlateNumber(self, val):
         self.plateNumber = val
+
+    def gettwitterusername(self):
+        return self.twitterusername
+
+    def settwitterusername(self, username):
+        self.twitterusername = username
+
+    def getPathToQRCode(self):
+        return self.pathToQRCODE
+
+    def setPathToQRCode(self, path):
+        self.pathToQRCODE = path
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__,
