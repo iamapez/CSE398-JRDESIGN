@@ -81,12 +81,13 @@ def initQRCodes():
             listOfObjects.append(tempUSER)
 
         d = os.getcwd()         # change directories to access the json file containing the data
+        os.chdir("..")
 
         # write our objects to a json file for reference later
         pathToCSV = 'assets/data.json'
         with open(pathToCSV, 'w') as outfile:   # write the objects to the outfile
             for item in listOfObjects:
-                outfile.write(item.toJSON())
+                outfile.write(json.dumps(item.__dict__))
 
     except Exception as e:
         print('Exception thrown! Could not write to the json file',e)
@@ -122,12 +123,12 @@ def pullDataFromJSON():
 
 if __name__ == '__main__':
 
-    # initQRCodes()         # only call this when we want to generate new qr code data
+    initQRCodes()         # only call this when we want to generate new qr code data
 
     # for next class if assets/data.json exists then regenerate the python objects else we got a problem
 
-    listOfUserObjects = pullDataFromJSON()
-
+    # listOfUserObjects = pullDataFromJSON()
+    print()
 
 
 
