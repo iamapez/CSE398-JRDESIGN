@@ -81,12 +81,14 @@ def initQRCodes():
             listOfObjects.append(tempUSER)
 
         d = os.getcwd()         # change directories to access the json file containing the data
+        os.chdir("..")
 
         # write our objects to a json file for reference later
         pathToCSV = 'assets/data.json'
         with open(pathToCSV, 'w') as outfile:   # write the objects to the outfile
             for item in listOfObjects:
-                outfile.write(item.toJSON())
+                outfile.write(json.dumps(item.__dict__))
+                outfile.write('\n')
 
     except Exception as e:
         print('Exception thrown! Could not write to the json file',e)
@@ -95,24 +97,31 @@ def initQRCodes():
 
 def pullDataFromJSON():
 
-    pathToDataJSON = '../assets/data.json'
-    if exists(pathToDataJSON):
-        # if it exists do something
-        f = open(pathToDataJSON)
-        data = json.load(f)
+    pathToDataJSON = 'assets/data.json'
+    d = os.getcwd()  # change directories to access the json file containing the data
+    os.chdir("..")
+    d = os.getcwd()  # change directories to access the json file containing the data
 
-        listOfObjects = list()
-        for i in data:
-            tempUSER = User()
-            tempUSER.setUUID(i)
-            tempUSER.setPathToQRCode('../assets/QRCODES/{}'.format(i+'.png'))
-            listOfObjects.append(tempUSER)
+    data = []
+    with open(pathToDataJSON) as f:
+        for line in f:
+            data.append(json.loads(line))
 
-        return listOfObjects
+    listOfUserObjects = list()
+    for i in data:
+        tempUSER = User(i['uuid'], i['balance'], i['name'], i['carColor'],
+                         i['plateNumber'], i['pathToQRCODE'])
+        # tempUSER.setUUID()
+        listOfUserObjects.append(tempUSER)
 
-    else:
-        # if it doesnt do something throw an exception
-        raise FileNotFoundError
+    return listOfUserObjects
+
+
+    print()
+
+    # else:
+    #     # if it doesnt do something throw an exception
+    #     raise FileNotFoundError
 
 
 
@@ -127,7 +136,7 @@ if __name__ == '__main__':
     # for next class if assets/data.json exists then regenerate the python objects else we got a problem
 
     listOfUserObjects = pullDataFromJSON()
-
+    print()
 
 
 
