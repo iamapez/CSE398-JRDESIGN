@@ -15,6 +15,8 @@ import os
 from os.path import exists
 import math
 
+global parkingFee
+
 
 def generateQRCode(name):
     """
@@ -154,7 +156,6 @@ def takePicFindQRCODE():
     data = pyzbar.decode(Image.open(img_name))
     decodedData = data[0].data.decode("utf-8")
 
-
     if len(data) == 0:
         print('NO QR Code Detected in Frame! Waiting 2 seconds for the next capture!')
         time.sleep(2)
@@ -166,6 +167,39 @@ def takePicFindQRCODE():
     return SystemError
 
 
+def carInCriticalArea(Users):
+    """
+    Called when ultrasonic sensor detects there is a car waiting to enter.
+    Scan qr code get data
+    check if uuid matches
+    get user object and do comparisons
+    """
+
+    qrCODEData = takePicFindQRCODE()
+    for i in Users:
+        if i.uuid == qrCODEData:
+            # print('got the user!')
+            return i
+
+
+def validateAccess(currentVehicle):
+    """
+    Check attributes of the user object to allow or deny access
+    :return True or False
+    """
+
+    if currentVehicle.getBalance() >= parkingFee:
+        currentVehicle.setBalance(currentVehicle.getBalance()-parkingFee)
+    else:
+        # send packet with reason for failure (insufficent funds)
+        return False
+
+
+
+
+
+    pass
+
 if __name__ == '__main__':
     """
     Our main entry point for the rock pi python code.  
@@ -173,18 +207,25 @@ if __name__ == '__main__':
     If we do have data we convert our json to python objects then we can do work
     """
 
+    parkingFee = 2.00
+
     # initQRCodes()         # only call this when we want to generate new qr code data
     listOfUserObjects = pullDataFromJSON()  # if we already have the data generated, get the objects
 
     # call this when a car is detected in the region
-    qrCODEData = takePicFindQRCODE()
+    # qrCODEData = takePicFindQRCODE()
+
+    # call when packet recieved that there is a car in the critical region
+    currentVehicle = carInCriticalArea(listOfUserObjects)
+
+    if validateAccess(currentVehicle):
+        # message to open gate and display something here on the screen
+        pass
+    else:
+        # keep gate closed and display error message on screen
+        pass
 
 
-
-
-    """
-    Listen for any packets from our Arduinos.  
-    """
 
     # now we can handle requests from the arduino
 
