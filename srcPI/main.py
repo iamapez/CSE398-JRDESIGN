@@ -1,5 +1,7 @@
 # Alexander C. Perez, acperez@syr.edu
 import json
+import time
+
 import cv2
 import webbrowser
 import pyqrcode
@@ -11,6 +13,7 @@ import random
 from User import User
 import os
 from os.path import exists
+import math
 
 
 def generateQRCode(name):
@@ -71,27 +74,27 @@ def initQRCodes():
     """
 
     try:
-        listOfNames = generateQRCodeByName()    # Get all the random strings
+        listOfNames = generateQRCodeByName()  # Get all the random strings
         listOfObjects = list()
 
-        for i in listOfNames:       # convert the list of random strings to objects setting their uuids add to listOfObjects
+        for i in listOfNames:  # convert the list of random strings to objects setting their uuids add to listOfObjects
             tempUSER = User()
             tempUSER.setPathToQRCode(generateQRCode(i))
             tempUSER.setUUID(i)
             listOfObjects.append(tempUSER)
 
-        d = os.getcwd()         # change directories to access the json file containing the data
+        d = os.getcwd()  # change directories to access the json file containing the data
         os.chdir("..")
 
         # write our objects to a json file for reference later
         pathToCSV = 'assets/data.json'
-        with open(pathToCSV, 'w') as outfile:   # write the objects to the outfile
+        with open(pathToCSV, 'w') as outfile:  # write the objects to the outfile
             for item in listOfObjects:
                 outfile.write(json.dumps(item.__dict__))
                 outfile.write('\n')
 
     except Exception as e:
-        print('Exception thrown! Could not write to the json file',e)
+        print('Exception thrown! Could not write to the json file', e)
         exit(-1)
 
 
@@ -114,13 +117,53 @@ def pullDataFromJSON():
     listOfUserObjects = list()
     for i in data:
         tempUSER = User(i['uuid'], i['balance'], i['name'], i['carColor'],
-                         i['plateNumber'], i['pathToQRCODE'])
+                        i['plateNumber'], i['pathToQRCODE'])
         # tempUSER.setUUID()
         listOfUserObjects.append(tempUSER)
 
     return listOfUserObjects
 
 
+def takePicFindQRCODE():
+    """
+    When a car is detected in the region before the gate, we take a picture and look for a qr code.
+    Send a message to the display that car detected...scanning qr code
+    if qr code detected do a lookup and handle logic
+    if qr code NOT detected send message to display...qr code not detected
+
+    :return: decodedQRCode data
+    """
+
+    # take a picture and save it to the disk, commented out code to display the image
+    cam = cv2.VideoCapture(4)
+    # cv2.namedWindow("Debug QR Code")
+
+    img_counter = 0
+    ret, frame = cam.read()
+    if not ret:
+        print("failed to grab frame")
+
+    # cv2.imshow("test", frame)
+    img_name = "opencv2_frame_{}.png".format(img_counter)
+    cv2.imwrite(img_name, frame)
+    print("{} written!".format(img_name))
+    # cv2.imshow('testing here', frame)
+
+    # do some work to detect the qr code
+    image = cv2.imread(img_name)
+    data = pyzbar.decode(Image.open(img_name))
+    decodedData = data[0].data.decode("utf-8")
+
+
+    if len(data) == 0:
+        print('NO QR Code Detected in Frame! Waiting 2 seconds for the next capture!')
+        time.sleep(2)
+        takePicFindQRCODE()
+    else:
+        # print(decodedData)
+        return decodedData
+
+    return SystemError
 
 
 if __name__ == '__main__':
@@ -131,13 +174,18 @@ if __name__ == '__main__':
     """
 
     # initQRCodes()         # only call this when we want to generate new qr code data
-    listOfUserObjects = pullDataFromJSON()      # if we already have the data generated, get the objects
+    listOfUserObjects = pullDataFromJSON()  # if we already have the data generated, get the objects
+
+    # call this when a car is detected in the region
+    qrCODEData = takePicFindQRCODE()
+
+
+
 
     """
     Listen for any packets from our Arduinos.  
     """
 
     # now we can handle requests from the arduino
-
 
     exit(1)
