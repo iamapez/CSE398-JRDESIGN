@@ -14,8 +14,19 @@ from User import User
 import os
 from os.path import exists
 import math
+import serial
+import time
 
 global parkingFee
+
+
+class Constants:
+    WaitForQRCODE = b'waiting'
+    PROCESSING = b'processing'
+    ACCESS_GRANTED = b'granted'
+    ACCESS_DENIED_FUNDS = b'deniedfunds'
+    ACCESS_DENIED_CARD = b'deniedcard'
+    # current balance
 
 
 def generateQRCode(name):
@@ -189,16 +200,13 @@ def validateAccess(currentVehicle):
     """
 
     if currentVehicle.getBalance() >= parkingFee:
-        currentVehicle.setBalance(currentVehicle.getBalance()-parkingFee)
+        currentVehicle.setBalance(currentVehicle.getBalance() - parkingFee)
     else:
         # send packet with reason for failure (insufficent funds)
         return False
 
-
-
-
-
     pass
+
 
 if __name__ == '__main__':
     """
@@ -216,6 +224,18 @@ if __name__ == '__main__':
     # qrCODEData = takePicFindQRCODE()
 
     # call when packet recieved that there is a car in the critical region
+
+
+    arduino_DISPLAY = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+    arduino_DISPLAY.reset_input_buffer()
+    while True:
+        arduino_DISPLAY.write(b"balance denied\n")
+        line = arduino_DISPLAY.readline().decode('utf-8').rstrip()
+        print(line)
+        time.sleep(1)
+
+    exit(1)
+
     currentVehicle = carInCriticalArea(listOfUserObjects)
 
     if validateAccess(currentVehicle):
@@ -224,8 +244,6 @@ if __name__ == '__main__':
     else:
         # keep gate closed and display error message on screen
         pass
-
-
 
     # now we can handle requests from the arduino
 
