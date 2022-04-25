@@ -1,22 +1,3 @@
-/**************************************************************************
- This is an example for our Monochrome OLEDs based on SSD1306 drivers
-
- Pick one up today in the adafruit shop!
- ------> http://www.adafruit.com/category/63_98
-
- This example is for a 128x64 pixel display using I2C to communicate
- 3 pins are required to interface (two I2C and one reset).
-
- Adafruit invests time and resources providing this open
- source code, please support Adafruit and open-source
- hardware by purchasing products from Adafruit!
-
- Written by Limor Fried/Ladyada for Adafruit Industries,
- with contributions from the open source community.
- BSD license, check license.txt for more information
- All text above, and the splash screen below must be
- included in any redistribution.
- **************************************************************************/
 
 #include <SPI.h>
 #include <Wire.h>
@@ -59,78 +40,57 @@ static const unsigned char PROGMEM logo_bmp[] =
 
 void setup() {
   Serial.begin(9600);
-
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
   }
-
-  // Show initial display buffer contents on the screen --
-  // the library initializes this with an Adafruit splash screen.
   display.display();
-  delay(2000); // Pause for 2 seconds
-
-  // Clear the buffer
+  delay(1000); // Pause for 2 second
   display.clearDisplay();
-
-
-  // Show the display buffer on the screen. You MUST call display() after
-  // drawing commands to make them visible on screen!
   display.display();
   delay(2000);
-  // display.display() is NOT necessary after every single drawing command,
-  // unless that's what you want...rather, you can batch up a bunch of
-  // drawing operations and then update the screen all at once by calling
-  // display.display(). These examples demonstrate both approaches...
-
 }
 
 void loop() {
-    testdrawstyles();    // Draw 'stylized' characters
-    printScanMessage();    // Draw scrolling text
+    accessGranted();    // Draw 'stylized' characters
+    pleaseScanCard();    // Draw scrolling text
     delay(2000);
-
+    accessDenied("Insufficient Funds");
+    delay(2000);
+    accessDenied("Invalid card");
 }
 
-void testdrawstyles(void) {
+void accessGranted(void) {
   display.clearDisplay();
-
-  display.setTextSize(1);             // Normal 1:1 pixel scale
+  display.setTextSize(2);             // Normal 1:1 pixel scale
   display.setTextColor(SSD1306_WHITE);        // Draw white text
-  const char* text = "Access Granted!";
-  oledDisplayCenter(text, 1);
-  //int textPosition = (SCREEN_WIDTH - strlen(text))/2;
-  //display.setCursor(textPosition,0);             // Start at top-left corner
-  //display.println(F("Access Granted!"));
-
-
+  oledDisplayCenter("Access", 0);
+  oledDisplayCenter("Granted", 1);
+  display.setTextSize(1); 
+  oledDisplayCenter("Pull Vehicle Forward", 3);
   display.display();
   delay(2000);
 }
-void printScanMessage(void){
-  display.setTextSize(1); 
+void pleaseScanCard(void){
+  display.setTextSize(2); 
   display.clearDisplay();
 
-  oledDisplayCenter("Welcome to 398", 0);
-  oledDisplayCenter("- Parking -", 1);
-  oledDisplayCenter("Please scan card", 2);
+  oledDisplayCenter("Please", 0);
+  oledDisplayCenter("Scan For", 1);
+  oledDisplayCenter("Access", 2);
   display.display();
-
-
 }
-void testscrolltext(void) {
+void accessDenied(String reason) {
   display.clearDisplay();
-
-  display.setTextSize(2); // Draw 2X-scale text
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10, 0);
-  display.setTextWrap(false);
-
-  display.println(F("Please\nscan\ncard"));
-  display.display();      // Show initial text
-  delay(100);
-
+  display.setTextSize(2);             // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  oledDisplayCenter("Access", 0);
+  oledDisplayCenter("Denied", 1);
+  display.setTextSize(1); 
+  oledDisplayCenter(reason, 3);
+  display.display();
+  delay(2000);
 }
 void oledDisplayCenter(String text, int num) {
   int16_t x1;
