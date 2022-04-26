@@ -21,7 +21,7 @@ global parkingFee
 
 
 class displayConstants:
-    WaitForQRCODE = b'waiting'
+    WAITFORQRCODE = b'waiting'
     PROCESSING = b'processing'
     ACCESS_GRANTED = b'granted'
     ACCESS_DENIED_FUNDS = b'deniedfunds'
@@ -29,8 +29,14 @@ class displayConstants:
     DISPLAY_BALANCE = b'displaybalance'
     # current balance
 
+
 class sensorConstants:
-    pass
+    OPEN_GATE = b'opengate'
+    CLOSE_GATE = b'closegate'
+    FRONT_SENSOR_ACTIVE = b'frontsensoractive'
+    FRONT_SENSOR_NACTIVE = b'frontsensornactive'
+    REAR_SENSOR_ACTIVE = b'rearsensoractive'
+    REAR_SENSOR_NACTIVE = b'rearsensornactive'
 
 
 def generateQRCode(name):
@@ -212,13 +218,60 @@ def validateAccess(currentVehicle):
     pass
 
 
-def communicateWithKyle():
-    arduino_DISPLAY = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+def sendStringToSensors(arduino_SENSORS, message):
+    """
+    Takes in a string and sends it to the SENSORS ARDUINO
+    :return success or failure
+    """
+    returnVal = 0
+    try:
+        arduino_SENSORS.reset_input_buffer()
+        arduino_SENSORS.write(message)
+    except Exception as e:
+        print('Caught Exception!', e)
+        print('Could not send a sendStringToSensors!')
+        return -1
+
+    return returnVal
+
+
+def getStringFromSensors(arduino_SENSORS):
+    arduino_SENSORS.reset_input_buffer()
+    message_Received = arduino_SENSORS.readline().decode('utf-8').rstrip()
+    if message_Received is not None:
+        return message_Received
+    else:
+        return 'no message'
+
+
+def sendStringToDisplay(arduino_DISPLAY, message):
+    """
+    Takes in a string and sends it to the DISPLAY ARDUINO
+    :return success or failure
+    """
+    returnVal = 0
+    try:
+        arduino_DISPLAY.reset_input_buffer()
+        arduino_DISPLAY.write(message)
+    except Exception as e:
+        print('Caught Exception!', e)
+        print('Could not send a sendStringToDisplay!')
+
+    return returnVal
+
+
+def getStringFromDisplay(arduino_DISPLAY):
     arduino_DISPLAY.reset_input_buffer()
+    message_Received = arduino_DISPLAY.readline().decode('utf-8').rstrip()
+    if message_Received is not None:
+        return message_Received
+    else:
+        return 'no message'
+
+
+def communicateWithDISPLAY():
 
     while True:
-        arduino_DISPLAY.write(displayConstants.ACCESS_DENIED_FUNDS)
-        line = arduino_DISPLAY.readline().decode('utf-8').rstrip()
         print(line)
         time.sleep(3)
 
@@ -243,7 +296,6 @@ def communicateWithKyle():
         time.sleep(3)
 
 
-
 if __name__ == '__main__':
     """
     Our main entry point for the rock pi python code.  
@@ -260,25 +312,21 @@ if __name__ == '__main__':
     # qrCODEData = takePicFindQRCODE()
 
     # call when packet recieved that there is a car in the critical region
+    #
 
-    arduino_DISPLAY = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
-    arduino_DISPLAY.reset_input_buffer()
+    # DEFINE LIZ'S ARDUINO
+    arduino_SENSORS = serial.Serial('/dev/ttyUSB1', 9600, timeout=1)
+    sendStringToSensors = (arduino_SENSORS, sensorConstants.REAR_SENSOR_ACTIVE)     # send a CONSTANT or b'string' to the display
+    response = getStringFromSensors(arduino_SENSORS)                                           # grab the response from liz's arduino
 
-    # arduino_SENSORS = serial.Serial('/dev/ttyUSB1', 9600, timeout=1)
     # arduino_SENSORS.reset_input_buffer()
 
-    while True:
-        arduino_DISPLAY.write(displayConstants.PROCESSING)
-        line = arduino_DISPLAY.readline().decode('utf-8').rstrip()
-        print(line)
-        time.sleep(3)
+    # DEFINE KYLE'S ARDUINO
+    arduino_DISPLAY = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+    sendStringToDisplay(arduino_DISPLAY, displayConstants.DISPLAY_BALANCE)      # send a CONSTANT or b'string' to the display
+    response = getStringFromDisplay(arduino_DISPLAY)                            # grabs the response from kyles arduino
 
-    # while True:
-    #     line = arduino_SENSORS.readline().decode('utf-8').rstrip()
-    #     print(line)
-    #
-    #
-    #     time.sleep(3)
+
 
 
     exit(1)
