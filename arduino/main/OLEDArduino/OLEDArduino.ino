@@ -37,6 +37,7 @@ static const unsigned char PROGMEM logo_bmp[] =
   0b01111100, 0b11110000,
   0b01110000, 0b01110000,
   0b00000000, 0b00110000 };
+   String readString;
 
 void setup() {
   Serial.begin(9600);
@@ -45,20 +46,45 @@ void setup() {
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
   }
-  display.display();
-  delay(1000); // Pause for 2 second
   display.clearDisplay();
-  display.display();
-  delay(2000);
+  delay(1000);
 }
 
 void loop() {
-    accessGranted();    // Draw 'stylized' characters
-    pleaseScanCard();    // Draw scrolling text
-    delay(2000);
-    accessDenied("Insufficient Funds");
-    delay(2000);
-    accessDenied("Invalid card");
+  processing();
+  delay(200);
+  if (Serial.available() > 0) {
+    String readString = Serial.readStringUntil('\n');
+    Serial.print("You sent me: ");
+    Serial.println(readString);
+    if(readString.equals("waiting")){
+      pleaseScanCard();
+    }
+    else if(readString.equals("processing")){
+      processing();
+    }
+    else if(readString.equals("granted")){
+      accessGranted();
+    }
+    else if(readString.equals("deniedfunds")){
+      Serial.println("inside if");
+      accessDenied("Insufficient Funds");
+    }
+    else if(readString.equals("deniedcard")){
+      accessDenied("Invalid card");
+    }
+    else if(readString.substring(0,7).equals("balance")){
+      String balance = readString.substring(7);
+      displayBalance(balance);
+    }
+  }
+    //accessGranted();    // Draw 'stylized' characters
+    //pleaseScanCard();    // Draw scrolling text
+    //delay(2000);
+   // accessDenied("Insufficient Funds");
+    //delay(2000);
+   // accessDenied("Invalid card");
+    //delay(2000)
 }
 
 void accessGranted(void) {
@@ -71,6 +97,19 @@ void accessGranted(void) {
   oledDisplayCenter("Pull Vehicle Forward", 3);
   display.display();
   delay(2000);
+}
+void displayBalance(String balance){
+  display.setTextSize(2); 
+  display.clearDisplay();
+  oledDisplayCenter("Balance:", 0);
+  oledDisplayCenter(balance, 1);
+  display.display();
+}
+void processing(void){
+  display.setTextSize(2); 
+  display.clearDisplay();
+  oledDisplayCenter("Processing", 1);
+  display.display();
 }
 void pleaseScanCard(void){
   display.setTextSize(2); 
