@@ -37,7 +37,6 @@ static const unsigned char PROGMEM logo_bmp[] =
   0b01111100, 0b11110000,
   0b01110000, 0b01110000,
   0b00000000, 0b00110000 };
-   String readString;
 
 void setup() {
   Serial.begin(9600);
@@ -54,33 +53,12 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    String readString = Serial.readStringUntil('\n');
-    Serial.print("You sent me: ");
-    Serial.println(readString);
-    if(readString.equals("waiting")){
-      pleaseScanCard();
-    }
-    else if(readString.equals("processing")){
-      Serial.print("in process");
-      processing();
-      delay(1000);
-    }
-    else if(readString.equals("granted")){
-      accessGranted();
-    }
-    else if(readString.equals("deniedfunds")){
-      Serial.println("inside if");
-      accessDenied("Insufficient Funds");
-    }
-    else if(readString.equals("deniedcard")){
-      accessDenied("Invalid card");
-    }
-    else if(readString.substring(0,7).equals("balance")){
-      String balance = readString.substring(7);
-      displayBalance(balance);
-    }
-  }
+    accessGranted();    // Draw 'stylized' characters
+    pleaseScanCard();    // Draw scrolling text
+    delay(2000);
+    accessDenied("Insufficient Funds");
+    delay(2000);
+    accessDenied("Invalid card");
 }
 
 void accessGranted(void) {
@@ -94,22 +72,6 @@ void accessGranted(void) {
   display.display();
   delay(2000);
 }
-void displayBalance(String balance){
-  display.setTextSize(2); 
-  display.clearDisplay();
-  oledDisplayCenter("Balance:", 0);
-  oledDisplayCenter(balance, 1);
-  display.display();
-  delay(3000);
-}
-void processing(void){
-  Serial.print("in method");
-  display.setTextSize(2); 
-  display.clearDisplay();
-  oledDisplayCenter("Processing", 1);
-  display.display();
-  delay(2000);
-}
 void pleaseScanCard(void){
   display.setTextSize(2); 
   display.clearDisplay();
@@ -118,7 +80,6 @@ void pleaseScanCard(void){
   oledDisplayCenter("Scan For", 1);
   oledDisplayCenter("Access", 2);
   display.display();
-  
 }
 void accessDenied(String reason) {
   display.clearDisplay();
