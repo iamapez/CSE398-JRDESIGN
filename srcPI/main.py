@@ -20,13 +20,17 @@ import time
 global parkingFee
 
 
-class Constants:
+class displayConstants:
     WaitForQRCODE = b'waiting'
     PROCESSING = b'processing'
     ACCESS_GRANTED = b'granted'
     ACCESS_DENIED_FUNDS = b'deniedfunds'
     ACCESS_DENIED_CARD = b'deniedcard'
+    DISPLAY_BALANCE = b'displaybalance'
     # current balance
+
+class sensorConstants:
+    pass
 
 
 def generateQRCode(name):
@@ -208,6 +212,38 @@ def validateAccess(currentVehicle):
     pass
 
 
+def communicateWithKyle():
+    arduino_DISPLAY = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+    arduino_DISPLAY.reset_input_buffer()
+
+    while True:
+        arduino_DISPLAY.write(displayConstants.ACCESS_DENIED_FUNDS)
+        line = arduino_DISPLAY.readline().decode('utf-8').rstrip()
+        print(line)
+        time.sleep(3)
+
+        arduino_DISPLAY.write(displayConstants.ACCESS_DENIED_CARD)
+        line = arduino_DISPLAY.readline().decode('utf-8').rstrip()
+        print(line)
+        time.sleep(3)
+
+        arduino_DISPLAY.write(displayConstants.WaitForQRCODE)
+        line = arduino_DISPLAY.readline().decode('utf-8').rstrip()
+        print(line)
+        time.sleep(3)
+
+        arduino_DISPLAY.write(displayConstants.PROCESSING)
+        line = arduino_DISPLAY.readline().decode('utf-8').rstrip()
+        print(line)
+        time.sleep(3)
+
+        arduino_DISPLAY.write(displayConstants.ACCESS_GRANTED)
+        line = arduino_DISPLAY.readline().decode('utf-8').rstrip()
+        print(line)
+        time.sleep(3)
+
+
+
 if __name__ == '__main__':
     """
     Our main entry point for the rock pi python code.  
@@ -225,14 +261,25 @@ if __name__ == '__main__':
 
     # call when packet recieved that there is a car in the critical region
 
-
     arduino_DISPLAY = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
     arduino_DISPLAY.reset_input_buffer()
+
+    # arduino_SENSORS = serial.Serial('/dev/ttyUSB1', 9600, timeout=1)
+    # arduino_SENSORS.reset_input_buffer()
+
     while True:
-        arduino_DISPLAY.write(b"balance denied\n")
+        arduino_DISPLAY.write(displayConstants.PROCESSING)
         line = arduino_DISPLAY.readline().decode('utf-8').rstrip()
         print(line)
-        time.sleep(1)
+        time.sleep(3)
+
+    # while True:
+    #     line = arduino_SENSORS.readline().decode('utf-8').rstrip()
+    #     print(line)
+    #
+    #
+    #     time.sleep(3)
+
 
     exit(1)
 
