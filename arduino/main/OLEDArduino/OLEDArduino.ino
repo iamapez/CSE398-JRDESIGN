@@ -95,8 +95,9 @@ void accessGranted(void) {
   delay(2000);
 }
 void displayBalance(String balance){
-  display.setTextSize(2); 
   display.clearDisplay();
+  display.setTextSize(2); 
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
   oledDisplayCenter("Balance:", 0);
   oledDisplayCenter(balance, 1);
   display.display();
@@ -104,8 +105,9 @@ void displayBalance(String balance){
 }
 void processing(void){
   Serial.print("in method");
-  display.setTextSize(2); 
   display.clearDisplay();
+  display.setTextSize(2); 
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
   oledDisplayCenter("Processing", 1);
   display.display();
   delay(2000);
@@ -113,7 +115,7 @@ void processing(void){
 void pleaseScanCard(void){
   display.setTextSize(2); 
   display.clearDisplay();
-
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
   oledDisplayCenter("Please", 0);
   oledDisplayCenter("Scan For", 1);
   oledDisplayCenter("Access", 2);
