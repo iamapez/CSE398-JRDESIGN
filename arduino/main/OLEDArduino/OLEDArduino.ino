@@ -70,7 +70,10 @@ void loop() {
     }
     else if(readString.equals("deniedfunds")){
       Serial.println("inside if");
-      accessDenied("Insufficient Funds");
+      lowBalance();
+    }
+    else if(readString.equals("nocard")){
+      noCardFound();
     }
     else if(readString.equals("deniedcard")){
       accessDenied("Invalid card");
@@ -118,6 +121,24 @@ void pleaseScanCard(void){
   oledDisplayCenter("Please", 0);
   oledDisplayCenter("Scan For", 1);
   oledDisplayCenter("Access", 2);
+  display.display();
+  delay(2000);
+}
+void noCardFound(void){
+  display.setTextSize(2); 
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  oledDisplayCenter("No Card", 0);
+  oledDisplayCenter("Found", 2);
+  display.display();
+  delay(2000);
+}
+void lowBalance(void){
+  display.setTextSize(2); 
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  oledDisplayCenter("Low", 0);
+  oledDisplayCenter("Balance", 2);
   display.display();
   delay(2000);
 }
