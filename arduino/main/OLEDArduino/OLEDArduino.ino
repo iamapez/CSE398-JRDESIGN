@@ -53,12 +53,33 @@ void setup() {
 }
 
 void loop() {
-    accessGranted();    // Draw 'stylized' characters
-    pleaseScanCard();    // Draw scrolling text
-    delay(2000);
-    accessDenied("Insufficient Funds");
-    delay(2000);
-    accessDenied("Invalid card");
+  if (Serial.available() > 0) {
+    String readString = Serial.readStringUntil('\n');
+    Serial.print("You sent me: ");
+    Serial.println(readString);
+    if(readString.equals("waiting")){
+      pleaseScanCard();
+    }
+    else if(readString.equals("processing")){
+      Serial.print("in process");
+      processing();
+      delay(1000);
+    }
+    else if(readString.equals("granted")){
+      accessGranted();
+    }
+    else if(readString.equals("deniedfunds")){
+      Serial.println("inside if");
+      accessDenied("Insufficient Funds");
+    }
+    else if(readString.equals("deniedcard")){
+      accessDenied("Invalid card");
+    }
+    else if(readString.substring(0,7).equals("balance")){
+      String balance = readString.substring(7);
+      displayBalance(balance);
+    }
+  }
 }
 
 void accessGranted(void) {
@@ -72,14 +93,33 @@ void accessGranted(void) {
   display.display();
   delay(2000);
 }
+void displayBalance(String balance){
+  display.clearDisplay();
+  display.setTextSize(2); 
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  oledDisplayCenter("Balance:", 0);
+  oledDisplayCenter(balance, 1);
+  display.display();
+  delay(3000);
+}
+void processing(void){
+  Serial.print("in method");
+  display.clearDisplay();
+  display.setTextSize(2); 
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  oledDisplayCenter("Processing", 1);
+  display.display();
+  delay(2000);
+}
 void pleaseScanCard(void){
   display.setTextSize(2); 
   display.clearDisplay();
-
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
   oledDisplayCenter("Please", 0);
   oledDisplayCenter("Scan For", 1);
   oledDisplayCenter("Access", 2);
   display.display();
+  delay(2000);
 }
 void accessDenied(String reason) {
   display.clearDisplay();

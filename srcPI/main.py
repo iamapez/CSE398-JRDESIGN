@@ -21,12 +21,12 @@ global parkingFee
 
 
 class displayConstants:
-    WAITFORQRCODE = b'waiting'
-    PROCESSING = b'processing'
-    ACCESS_GRANTED = b'granted'
-    ACCESS_DENIED_FUNDS = b'deniedfunds'
-    ACCESS_DENIED_CARD = b'deniedcard'
-    DISPLAY_BALANCE = b'displaybalance'
+    WAITFORQRCODE = b'waiting\n'
+    PROCESSING = b'processing\n'
+    ACCESS_GRANTED = b'granted\n'
+    ACCESS_DENIED_FUNDS = b'deniedfunds\n'
+    ACCESS_DENIED_CARD = b'deniedcard\n'
+    DISPLAY_BALANCE = b'displaybalance\n'
     # current balance
 
 
@@ -218,7 +218,6 @@ def validateAccess(currentVehicle):
         # send packet with reason for failure (insufficent funds)
         return -1
 
-    pass
 
 
 def sendStringToSensors(arduino_SENSORS, message):
@@ -298,13 +297,12 @@ def communicateWithDISPLAY():
         print(line)
         time.sleep(3)
 
-
-if __name__ == '__main__':
+def main():
     """
-    Our main entry point for the rock pi python code.  
-    If we dont have any existing data we call initQRCodes() to generate all the data
-    If we do have data we convert our json to python objects then we can do work
-    """
+       Our main entry point for the rock pi python code.
+       If we dont have any existing data we call initQRCodes() to generate all the data
+       If we do have data we convert our json to python objects then we can do work
+       """
 
     parkingFee = 2.00
 
@@ -317,20 +315,29 @@ if __name__ == '__main__':
     # call when packet recieved that there is a car in the critical region
     #
 
-    arduino_SENSORS = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)            # define the sensor Arduino as a Serial object
-    arduino_DISPLAY = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)            # define the display Arduino as a Serial object
+    arduino_SENSORS = serial.Serial('/dev/ttyUSB2', 9600, timeout=1)  # define the sensor Arduino as a Serial object
+    arduino_DISPLAY = serial.Serial('/dev/ttyUSB1', 9600, timeout=1)  # define the display Arduino as a Serial object
+    arduino_SENSORS.reset_input_buffer()
+    arduino_DISPLAY.reset_input_buffer()
 
     while 1:
-        arduino_SENSORS.write(sensorConstants.CLOSE_GATE)                       # start the program with the gate closed
-        arduino_DISPLAY.write(displayConstants.WAITFORQRCODE)                   # display "waiting.." or something similar
+        arduino_SENSORS.reset_input_buffer()
+        arduino_SENSORS.write(sensorConstants.CLOSE_GATE)  # start the program with the gate closed
+
+        arduino_DISPLAY.reset_input_buffer()
+        time.sleep(2)
+        arduino_DISPLAY.write(displayConstants.WAITFORQRCODE)  # display "waiting.." or something similar
+
         # right now the gate is closed, and we are waiting for someone to pull up to the sensor
+        time.sleep(2)
 
         # now we want to get info from the Sensor Arduino.
         while 1:
             arduino_SENSORS.reset_input_buffer()
             sensor_Data = arduino_SENSORS.readline().decode('utf-8').rstrip()
-            if sensor_Data == sensorConstants.FRONT_SENSOR_ACTIVE:              # wait until we know there is someone in the front
-                arduino_DISPLAY.write(displayConstants.PROCESSING)              # display processing on the display
+            if sensor_Data == 'frontsensoractive':  # wait until we know there is someone in the front
+                arduino_DISPLAY.write(displayConstants.PROCESSING)  # display processing on the display
+                time.sleep(2)
 
                 # do the sub process for qr code...
                 # currentVehicle is the object pulled from JSON
@@ -348,9 +355,9 @@ if __name__ == '__main__':
                         # now we wait to see when a car is past, then we close the gate when thats true
                         arduino_SENSORS.reset_input_buffer()
                         sensor_Data = arduino_SENSORS.readline().decode('utf-8').rstrip()
-                        if sensor_Data == sensorConstants.REAR_SENSOR_ACTIVE:
+                        if sensor_Data == 'rearsensoractive':
                             arduino_SENSORS.write(sensorConstants.CLOSE_GATE)
-                            break
+                            main()
                 elif validateAccess(currentVehicle) == -1:
                     # keep gate closed and display error message on screen
                     arduino_DISPLAY.write(displayConstants.ACCESS_DENIED_FUNDS)
@@ -363,3 +370,6 @@ if __name__ == '__main__':
                 else:
                     print('UNKNOWN ERROR!')
                     break
+
+if __name__ == '__main__':
+   main()
