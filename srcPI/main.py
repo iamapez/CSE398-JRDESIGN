@@ -211,7 +211,7 @@ def validateAccess(currentVehicle):
     :return 1 is good balance, -1 is insufficent balance
     """
 
-    if currentVehicle.getBalance() >= parkingFee:
+    if currentVehicle.getBalance() >= 2.00:
         currentVehicle.setBalance(currentVehicle.getBalance() - parkingFee)
         return 1
     else:
@@ -222,7 +222,7 @@ def validateAccess(currentVehicle):
 def doWork():
     parkingFee = 2.00
     listOfUserObjects = pullDataFromJSON()  # if we already have the data generated, get the objects
-    arduino_SENSORS = serial.Serial('/dev/ttyUSB2', 9600, timeout=1)  # define the sensor Arduino as a Serial object
+    arduino_SENSORS = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)  # define the sensor Arduino as a Serial object
     arduino_DISPLAY = serial.Serial('/dev/ttyUSB1', 9600, timeout=1)  # define the display Arduino as a Serial object
     arduino_SENSORS.reset_input_buffer()
     arduino_DISPLAY.reset_input_buffer()
@@ -254,13 +254,19 @@ def doWork():
             arduino_SENSORS.write(sensorConstants.CLOSE_GATE)
             arduino_DISPLAY.write(displayConstants.ACCESS_DENIED_CARD)
         else:
-            if validateAccess(currentVehicle) == 1:
+            if currentVehicle.balance > parkingFee:
+                currentVehicle.balance = currentVehicle.balance - parkingFee
                 arduino_DISPLAY.write(displayConstants.ACCESS_GRANTED)
                 arduino_SENSORS.write(sensorConstants.OPEN_GATE)
                 # display the current balance here
                 time.sleep(3)
-                temp_String = 'balance${}'.join(currentVehicle.getBalance())
+                temp_String = 'balance${}'.format(currentVehicle.balance)
+
+                # print(temp_String)
+                # print(temp_String.encode())
+
                 arduino_DISPLAY.write(temp_String.encode())  # verify this
+                time.sleep(2)
                 while 1:
                     arduino_SENSORS.reset_input_buffer()
                     sensor_Data = arduino_SENSORS.readline().decode('utf-8').rstrip()
@@ -268,7 +274,7 @@ def doWork():
                         break
                 arduino_SENSORS.write(sensorConstants.CLOSE_GATE)
 
-            elif validateAccess(currentVehicle) == -1:
+            elif response == -1:
                 # keep gate closed and display error message on screen
                 arduino_DISPLAY.write(displayConstants.ACCESS_DENIED_FUNDS)
                 arduino_SENSORS.write(sensorConstants.CLOSE_GATE)
