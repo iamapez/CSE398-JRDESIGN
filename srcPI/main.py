@@ -21,7 +21,9 @@ global parkingFee
 
 
 class displayConstants:
-    WAITFORQRCODE = b'waiting\n'
+    PULL_UP = b'pullup\n'
+    CAR_DETECTED = b'cardetected\n'
+    SHOW_QRCODE = b'showqrcode\n'
     PROCESSING = b'processing\n'
     ACCESS_GRANTED = b'granted\n'
     ACCESS_DENIED_FUNDS = b'deniedfunds\n'
@@ -236,33 +238,47 @@ def doWork():
     arduino_SENSORS.reset_input_buffer()
     arduino_DISPLAY.reset_input_buffer()
 
+    # pull up to gate
+    # instead of processing, please scan for access
+    # then processing
+    # add special card to add funds to each person
+
     while 1:
         arduino_SENSORS.reset_input_buffer()
         arduino_SENSORS.write(sensorConstants.CLOSE_GATE)  # start the program with the gate closed
 
         arduino_DISPLAY.reset_input_buffer()
         time.sleep(2)
-        arduino_DISPLAY.write(displayConstants.WAITFORQRCODE)  # display "waiting.." or something similar
+        arduino_DISPLAY.write(displayConstants.PULL_UP)  # display "pull up on the display"
 
         # right now the gate is closed, and we are waiting for someone to pull up to the sensor
         time.sleep(2)
+
+        print('waiting for someone to pull up to the sensor')
 
         while True:
             arduino_SENSORS.reset_input_buffer()
             sensor_Data = arduino_SENSORS.readline().decode('utf-8').rstrip()
             if sensor_Data == 'frontsensoractive':  # wait until we know there is someone in the front
+                # display car detected...
+                arduino_DISPLAY.write(displayConstants.CAR_DETECTED)
+                time.sleep(2)
                 break
 
-        arduino_DISPLAY.write(displayConstants.PROCESSING)  # display processing on the display
-        time.sleep(2)
+        # this should say show qr code here... once it is taken then show procesing
+        arduino_DISPLAY.write(displayConstants.SHOW_QRCODE)
+        time.sleep(3)
 
         # do the sub process for qr code...
         # currentVehicle is the object pulled from JSON
-
         print('SHOW QR CODE PLEASE')
-        time.sleep(2)
-
+        time.sleep(5)
+        print('capturing qr code')
+        # display processing here
         currentVehicle = carInCriticalArea(listOfUserObjects)
+
+        arduino_DISPLAY.write(displayConstants.PROCESSING)  # display processing on the display
+        # check if we need a sleep down here because the python logic here will not complete if < 2 s execution
         if currentVehicle == -100:
             arduino_SENSORS.write(sensorConstants.CLOSE_GATE)
             arduino_DISPLAY.write(displayConstants.ACCESS_DENIED_CARD)
@@ -276,11 +292,12 @@ def doWork():
                 arduino_DISPLAY.write(displayConstants.ACCESS_GRANTED)
                 arduino_SENSORS.write(sensorConstants.OPEN_GATE)
                 # display the current balance here
-                time.sleep(2)
+                print('The current vehicle of interest:')
+                print('Vehicle UUID:{}\n Vehicle Balance:{}'.format(currentVehicle.uuid,currentVehicle.balance))
+                time.sleep(4)
                 temp_String = 'balance${}'.format(currentVehicle.balance)
-
-                arduino_DISPLAY.write(temp_String.encode())  # verify this
-                time.sleep(2)
+                arduino_DISPLAY.write(temp_String.encode())
+                time.sleep(5)
                 while 1:
                     arduino_SENSORS.reset_input_buffer()
                     sensor_Data = arduino_SENSORS.readline().decode('utf-8').rstrip()
