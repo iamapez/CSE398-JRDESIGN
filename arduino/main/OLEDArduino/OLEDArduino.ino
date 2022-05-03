@@ -57,17 +57,18 @@ void loop() {
     String readString = Serial.readStringUntil('\n');
     Serial.print("You sent me: ");
     Serial.println(readString);
-    if(readString.equals("pullup")){
-      pleasePullUp();
+    
+    if(readString.equals("waiting")){
+      pleaseScanCard();
     }
-    else if(readString.equals("cardetected")){
-      Serial.print("in car detected");
-      carDetected();
+    else if(readString.equals("pullup")){
+      Serial.print("pull up");
+      pleasePullUp();
       delay(1000);
     }
     else if(readString.equals("showqrcode")){
-      Serial.print("in showqrcode");
-      showqrcode();
+      Serial.print("showqrcode");
+      showQRCODE();
       delay(1000);
     }
     else if(readString.equals("processing")){
@@ -86,10 +87,11 @@ void loop() {
       noCardFound();
     }
     else if(readString.equals("deniedcard")){
-      accessDenied("Invalid card");
+    invalidCard();
     }
     else if(readString.substring(0,7).equals("balance")){
-      String balance = readString.substring(7);
+      Serial.println("in balance");
+      String balance = String(readString.substring(7,readString.length()));
       displayBalance(balance);
     }
   }
@@ -110,37 +112,8 @@ void displayBalance(String balance){
   display.clearDisplay();
   display.setTextSize(2); 
   display.setTextColor(SSD1306_WHITE);        // Draw white text
-  oledDisplayCenter("Balance:", 0);
-  oledDisplayCenter(balance, 1);
-  display.display();
-  delay(3000);
-}
-void carDetected(void){
-  Serial.print("in method");
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.setTextColor(SSD1306_WHITE);        // Draw white text
-  oledDisplayCenter("Car", 1);
-  oledDisplayCenter("Detected", 1);
-  display.display();
-  delay(2000);
-}
-void showqrcode(void){
-  Serial.print("in method");
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.setTextColor(SSD1306_WHITE);        // Draw white text
-  oledDisplayCenter("SHOW", 1);
-  oledDisplayCenter("QR CODE", 1);
-  display.display();
-  delay(2000);
-}
-void processing(void){
-  Serial.print("in method");
-  display.clearDisplay();
-  display.setTextSize(2); 
-  display.setTextColor(SSD1306_WHITE);        // Draw white text
-  oledDisplayCenter("Processing", 1);
+  oledDisplayCenter("Balance", 1);
+  oledDisplayCenter(balance, 2);
   display.display();
   delay(2000);
 }
@@ -153,7 +126,44 @@ void pleasePullUp(void){
   display.display();
   delay(2000);
 }
+void carDetected(void){
+  display.setTextSize(2);
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  oledDisplayCenter("Car", 0);
+  oledDisplayCenter("Seen", 1);
+  display.display();
+  delay(2000);
+}
+void showQRCODE(void){
+  display.setTextSize(2);
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  oledDisplayCenter("Show", 0);
+  oledDisplayCenter("QR CODE", 1);
+  display.display();
+  delay(2000);
+}
+void invalidCard(void){
+  display.setTextSize(2);
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  oledDisplayCenter("DENIED", 0);
+  oledDisplayCenter("BAD", 1);
+  oledDisplayCenter("CARD!", 2);
+  display.display();
+  delay(2000);
+}
 
+void processing(void){
+  Serial.print("in method");
+  display.clearDisplay();
+  display.setTextSize(2); 
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  oledDisplayCenter("Processing", 1);
+  display.display();
+  delay(2000);
+}
 void pleaseScanCard(void){
   display.setTextSize(2); 
   display.clearDisplay();
@@ -174,11 +184,12 @@ void noCardFound(void){
   delay(2000);
 }
 void lowBalance(void){
-  display.setTextSize(2); 
+  display.setTextSize(2);
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);        // Draw white text
-  oledDisplayCenter("Low", 0);
-  oledDisplayCenter("Balance", 2);
+  oledDisplayCenter("DENIED", 0);
+  oledDisplayCenter("LOW", 1);
+  oledDisplayCenter("BALANCE!", 2);
   display.display();
   delay(2000);
 }

@@ -233,8 +233,8 @@ def validateAccess(currentVehicle):
 def doWork():
     parkingFee = 2.00
     listOfUserObjects = pullDataFromJSON()  # if we already have the data generated, get the objects
-    arduino_SENSORS = serial.Serial('/dev/ttyUSB1', 9600, timeout=1)  # define the sensor Arduino as a Serial object
-    arduino_DISPLAY = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)  # define the display Arduino as a Serial object
+    arduino_SENSORS = serial.Serial('/dev/ttyUSB5', 9600, timeout=1)  # define the sensor Arduino as a Serial object
+    arduino_DISPLAY = serial.Serial('/dev/ttyUSB4', 9600, timeout=1)  # define the display Arduino as a Serial object
     arduino_SENSORS.reset_input_buffer()
     arduino_DISPLAY.reset_input_buffer()
 
@@ -253,16 +253,14 @@ def doWork():
 
         # right now the gate is closed, and we are waiting for someone to pull up to the sensor
         time.sleep(2)
-
-        print('waiting for someone to pull up to the sensor')
-
+        print('WAITING FOR SOMEONE TO PULL UP TO THE SENSOR')
         while True:
             arduino_SENSORS.reset_input_buffer()
             sensor_Data = arduino_SENSORS.readline().decode('utf-8').rstrip()
             if sensor_Data == 'frontsensoractive':  # wait until we know there is someone in the front
                 # display car detected...
-                arduino_DISPLAY.write(displayConstants.CAR_DETECTED)
-                time.sleep(2)
+                # arduino_DISPLAY.write(displayConstants.CAR_DETECTED)
+                # time.sleep(2)
                 break
 
         # this should say show qr code here... once it is taken then show procesing
@@ -273,7 +271,6 @@ def doWork():
         # currentVehicle is the object pulled from JSON
         print('SHOW QR CODE PLEASE')
         time.sleep(5)
-        print('capturing qr code')
         # display processing here
         currentVehicle = carInCriticalArea(listOfUserObjects)
 
@@ -282,20 +279,23 @@ def doWork():
         if currentVehicle == -100:
             arduino_SENSORS.write(sensorConstants.CLOSE_GATE)
             arduino_DISPLAY.write(displayConstants.ACCESS_DENIED_CARD)
+            time.sleep(4)
         elif currentVehicle == -200:
             arduino_SENSORS.write(sensorConstants.CLOSE_GATE)
             arduino_DISPLAY.write(displayConstants.NO_CARD_FOUND)
-            time.sleep(1)
+            time.sleep(4)
         else:
             if currentVehicle.balance > parkingFee:
                 currentVehicle.balance = currentVehicle.balance - parkingFee
                 arduino_DISPLAY.write(displayConstants.ACCESS_GRANTED)
+                time.sleep(3)
                 arduino_SENSORS.write(sensorConstants.OPEN_GATE)
                 # display the current balance here
                 print('The current vehicle of interest:')
                 print('Vehicle UUID:{}\n Vehicle Balance:{}'.format(currentVehicle.uuid,currentVehicle.balance))
                 time.sleep(4)
-                temp_String = 'balance${}'.format(currentVehicle.balance)
+                temp_String = 'balance{}\n'.format(currentVehicle.balance).lstrip()
+                time.sleep(3)
                 arduino_DISPLAY.write(temp_String.encode())
                 time.sleep(5)
                 while 1:
@@ -308,6 +308,7 @@ def doWork():
             else:
                 # keep gate closed and display error message on screen
                 arduino_DISPLAY.write(displayConstants.ACCESS_DENIED_FUNDS)
+                time.sleep(4)
                 arduino_SENSORS.write(sensorConstants.CLOSE_GATE)
 
 
